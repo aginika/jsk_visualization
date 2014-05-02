@@ -1,0 +1,43 @@
+<launch>
+  <arg name="manager" default="/camera_nodelet_manager" />
+
+  <include file="$(find openni_launch)/launch/openni.launch">
+    <param name="depth_registered" value="true"/>
+  </include>
+
+  <arg name="input_point" default="/camera/depth_registered/points" />
+  <group ns="pcl_nodelet">
+    <node pkg="nodelet" type="nodelet"
+          name="voxelgrid"
+          args="load pcl/VoxelGrid $(arg manager)"
+          output="screen" clear_params="true">
+      <remap from="~input" to="$(arg input_point)" />
+      <rosparam>
+        filter_limit_max: 5.0
+        leaf_size: 0.01
+      </rosparam>
+    </node>
+    <node pkg="nodelet" type="nodelet"
+          name="normal_estimate"
+          args="load pcl/NormalEstimation $(arg manager)"
+          output="screen" clear_params="true">
+      <remap from="~input" to="/pcl_nodelet/voxelgrid/output" />
+      <rosparam>
+        spatial_locator: 1
+        radius_search: 0.05
+        k_search: 0
+      </rosparam>
+    </node>
+    <node pkg="nodelet" type="nodelet"
+          name="synchronizer"
+          args="load pcl/PointCloudConcatenateDataSynchronizer $(arg manager)"
+          output="screen" clear_params="true">
+      <rosparam param="input_topics"> [/pcl_nodelet/voxelgrid/output,/pcl_nodelet/normal_estimate/output]</rosparam>
+      <rosparam param="output_frame">/camera_rgb_optical_frame</rosparam>
+      <rosparam param="approximate_sync">true</rosparam>
+      <rosparam param="max_queue_size">10</rosparam>
+      <rosparam param="same_fields">false</rosparam>
+    </node>
+
+  </group>
+</launch>
