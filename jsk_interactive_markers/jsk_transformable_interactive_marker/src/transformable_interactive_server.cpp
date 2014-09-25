@@ -3,7 +3,11 @@
 using namespace jsk_transformable_interactive_marker;
 
 TransformableInteractiveServer::TransformableInteractiveServer():n_(new ros::NodeHandle){
+  n_->param("torus_udiv", torus_udiv_, 20);
+  n_->param("torus_vdiv", torus_vdiv_, 20);
+
   setpose_sub_ = n_->subscribe("set_pose", 1, &TransformableInteractiveServer::setPose, this);
+ setcolor_sub_ = n_->subscribe("set_color", 1, &TransformableInteractiveServer::setColor, this);
 
   set_r_sub_ = n_->subscribe("set_radius", 1, &TransformableInteractiveServer::setRadius, this);
   set_sm_r_sub_ = n_->subscribe("set_small_radius", 1, &TransformableInteractiveServer::setSmallRadius, this);
@@ -54,6 +58,13 @@ void TransformableInteractiveServer::processFeedback(
         ROS_ERROR("Invalid ObjectId Request Received %s", feedback->marker_name.c_str());
       break;
     }
+}
+
+void TransformableInteractiveServer::setColor(std_msgs::ColorRGBA msg)
+{
+  TransformableObject* tobject = transformable_objects_map_[focus_object_marker_name_];
+  tobject->setRGBA(msg.r, msg.g, msg.b, msg.a);
+  updateTransformableObject(tobject);
 }
 
 void TransformableInteractiveServer::setRadius(std_msgs::Float32 msg)
@@ -197,7 +208,7 @@ void TransformableInteractiveServer::insertNewCylinder( std::string frame_id, st
 
 void TransformableInteractiveServer::insertNewTorus( std::string frame_id, std::string name, std::string description)
 {
-  TransformableTorus* transformable_torus = new TransformableTorus(0.45, 0.2, 0.5, 0.5, 0.5, 1.0, frame_id, name, description);
+  TransformableTorus* transformable_torus = new TransformableTorus(0.45, 0.2, torus_udiv_, torus_vdiv_, 0.5, 0.5, 0.5, 1.0, frame_id, name, description);
   insertNewObject(transformable_torus, name);
 }
 

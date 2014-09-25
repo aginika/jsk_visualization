@@ -32,6 +32,8 @@ namespace jsk_transformable_interactive_marker
     void setPose(geometry_msgs::PoseStamped msg);
     void addPoseDiff(geometry_msgs::PoseStamped msg);
 
+    void setColor(std_msgs::ColorRGBA msg);
+
     void insertNewBox( std::string frame_id, std::string name, std::string description );
     void insertNewCylinder( std::string frame_id, std::string name, std::string description );
     void insertNewTorus( std::string frame_id, std::string name, std::string description );
@@ -50,6 +52,7 @@ namespace jsk_transformable_interactive_marker
     std::string focus_object_marker_name_;
     ros::NodeHandle* n_;
 
+    ros::Subscriber setcolor_sub_;
     ros::Subscriber setpose_sub_;
     ros::Subscriber addposediff_sub_;
 
@@ -66,6 +69,9 @@ namespace jsk_transformable_interactive_marker
     ros::Publisher focus_pose_pub_;
     interactive_markers::InteractiveMarkerServer* server_;
     map<string, TransformableObject*> transformable_objects_map_;
+
+    int torus_udiv_;
+    int torus_vdiv_;
   };
 }
 

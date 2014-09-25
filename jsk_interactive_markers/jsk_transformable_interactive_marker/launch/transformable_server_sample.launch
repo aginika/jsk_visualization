@@ -1,8 +1,13 @@
 <launch>
   <arg name="korg_id" value="3"/>
 
-  <node pkg="jsk_transformable_interactive_marker" type="transformable_server_sample" name="server_sample"/>
+  <param name="torus_udiv" value="100"/>
+  <param name="torus_vdiv" value="100"/>
+  <node pkg="jsk_transformable_interactive_marker" type="transformable_server_sample" name="server_sample">
+  </node>
+
   <node pkg="rviz" type="rviz" name="rviz" args=" -d $(find jsk_transformable_interactive_marker)/config/transformable_server_sample.rviz"/>
+
   <node pkg="korg_nanokontrol" type="kontrol.py" name="korg_control" args=" $(arg korg_id)">
     <remap from="joy" to="korg_joy"/>
   </node>

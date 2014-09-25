@@ -11,7 +11,7 @@ namespace jsk_transformable_interactive_marker
   class TransformableTorus: public TransformableObject
   {
   public:
-    TransformableTorus( float radius, float small_radius, float r, float g, float b, float a, std::string frame, std::string name, std::string description);
+    TransformableTorus( float radius, float small_radius, int u_div, int v_div, float r, float g, float b, float a, std::string frame, std::string name, std::string description);
 
     visualization_msgs::Marker getVisualizationMsgMarker();
     void setRGBA( float r , float g, float b, float a){torus_r_=r;torus_g_=g;torus_b_=b;torus_a_=a;};
@@ -29,6 +29,9 @@ namespace jsk_transformable_interactive_marker
     float torus_g_;
     float torus_b_;
     float torus_a_;
+
+    int u_division_num_;
+    int v_division_num_;
   };
 };
 

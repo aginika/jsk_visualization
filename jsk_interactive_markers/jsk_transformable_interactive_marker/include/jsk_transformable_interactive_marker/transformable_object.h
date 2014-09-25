@@ -37,6 +37,7 @@ namespace jsk_transformable_interactive_marker {
     virtual bool setX(std_msgs::Float32 recieve_val){return false;};
     virtual bool setY(std_msgs::Float32 recieve_val){return false;};
     virtual bool setZ(std_msgs::Float32 recieve_val){return false;};
+    virtual void setRGBA(float r , float g, float b, float a){};
 
     virtual float getInteractiveMarkerScale(){};
   };

@@ -4,7 +4,7 @@
 #define PI 3.14159265
 namespace jsk_transformable_interactive_marker{
 
-  TransformableTorus::TransformableTorus( float radius, float small_radius, float r, float g, float b, float a, std::string frame, std::string name, std::string description){
+  TransformableTorus::TransformableTorus( float radius, float small_radius, int u_div, int v_div, float r, float g, float b, float a, std::string frame, std::string name, std::string description){
     torus_radius_ = radius;
     torus_small_radius_ = small_radius;
     torus_r_ = r;
@@ -16,14 +16,17 @@ namespace jsk_transformable_interactive_marker{
     frame_id_ = frame;
     name_ = name;
     description_ = description;
+
+    u_division_num_ = u_div;
+    v_division_num_ = v_div;
   }
 
   std::vector<geometry_msgs::Point > TransformableTorus::calcurateTriangleMesh(){
     std::vector<geometry_msgs::Point> triangle_mesh;
     float center_x = 0;
     float center_y = 0;
-    float u_division_num = 20;
-    float v_division_num = 20;
+    float u_division_num = u_division_num_;
+    float v_division_num = v_division_num_;
     std::vector<std::vector<geometry_msgs::Point> > points_array;
     for (int i = 0; i < u_division_num; i ++){
       std::vector<geometry_msgs::Point> points;
