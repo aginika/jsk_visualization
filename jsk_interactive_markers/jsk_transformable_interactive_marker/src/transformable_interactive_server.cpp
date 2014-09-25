@@ -15,7 +15,7 @@ TransformableInteractiveServer::TransformableInteractiveServer():n_(new ros::Nod
   set_y_sub_ = n_->subscribe("set_y", 1, &TransformableInteractiveServer::setY, this);
   set_z_sub_ = n_->subscribe("set_z", 1, &TransformableInteractiveServer::setZ, this);
 
-  addposediff_sub_ = n_->subscribe("add_pose_diff", 1, &TransformableInteractiveServer::addPoseDiff, this);
+  addpose_sub_ = n_->subscribe("add_pose", 1, &TransformableInteractiveServer::addPose, this);
 
   setrad_sub_ = n_->subscribe("set_radius", 1, &TransformableInteractiveServer::setRadius, this);
 
@@ -134,18 +134,10 @@ bool TransformableInteractiveServer::getPoseService(jsk_transformable_interactiv
 }
 
 
-void TransformableInteractiveServer::addPoseDiff(geometry_msgs::PoseStamped msg){
-  visualization_msgs::InteractiveMarker int_marker;
-  server_->get(focus_object_marker_name_, int_marker);
-  int_marker.pose.position.x += msg.pose.position.x;
-  int_marker.pose.position.y += msg.pose.position.y;
-  int_marker.pose.position.z += msg.pose.position.z;
-  int_marker.pose.orientation.x += msg.pose.orientation.x;
-  int_marker.pose.orientation.y += msg.pose.orientation.y;
-  int_marker.pose.orientation.z += msg.pose.orientation.z;
-  int_marker.pose.orientation.w += msg.pose.orientation.w;
-  server_->setPose(focus_object_marker_name_, int_marker.pose, msg.header);
-  server_->applyChanges();
+void TransformableInteractiveServer::addPose(geometry_msgs::Pose msg){
+  TransformableObject* tobject = transformable_objects_map_[focus_object_marker_name_];
+  tobject->addPose(msg);
+  updateTransformableObject(tobject);
 }
 
 void TransformableInteractiveServer::focusTextPublish(){

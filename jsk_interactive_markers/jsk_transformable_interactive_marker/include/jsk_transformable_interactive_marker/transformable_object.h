@@ -30,6 +30,7 @@ namespace jsk_transformable_interactive_marker {
     std::string description_;
 
     void setPose(geometry_msgs::Pose pose){pose_=pose;};
+    void addPose(geometry_msgs::Pose msg);
     geometry_msgs::Pose getPose(){return pose_;};
     virtual bool setRadius(std_msgs::Float32 recieve_val){return false;};
     virtual bool setSmallRadius(std_msgs::Float32 recieve_val){return false;};

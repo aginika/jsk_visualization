@@ -6,9 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /InteractiveMarkers1
-        - /OverlayText1
-        - /OverlayText2
-      Splitter Ratio: 0.5
+      Splitter Ratio: 0.650558
     Tree Height: 595
   - Class: rviz/Selection
     Name: Selection
@@ -63,16 +61,25 @@ Visualization Manager:
       Show Visual Aids: false
       Update Topic: /simple_marker/update
       Value: true
-    - Class: jsk_rviz_plugin/OverlayText
+    - Class: rviz/Group
+      Displays:
+        - Class: jsk_rviz_plugin/OverlayText
+          Enabled: true
+          Name: FocusObjectName
+          Topic: /focus_marker_name
+          Value: true
+        - Class: jsk_rviz_plugin/OverlayText
+          Enabled: true
+          Name: FocusObjectPose
+          Topic: /focus_marker_pose
+          Value: true
+        - Class: jsk_rviz_plugin/OverlayText
+          Enabled: true
+          Name: SpaceNavMode
+          Topic: /separate_mode_text
+          Value: true
       Enabled: true
-      Name: OverlayText
-      Topic: /focus_marker_name
-      Value: true
-    - Class: jsk_rviz_plugin/OverlayText
-      Enabled: true
-      Name: OverlayText
-      Topic: /focus_marker_pose
-      Value: true
+      Name: Texts
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48

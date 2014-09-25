@@ -30,7 +30,7 @@ namespace jsk_transformable_interactive_marker
     void setZ(std_msgs::Float32 msg);
 
     void setPose(geometry_msgs::PoseStamped msg);
-    void addPoseDiff(geometry_msgs::PoseStamped msg);
+    void addPose(geometry_msgs::Pose msg);
 
     void setColor(std_msgs::ColorRGBA msg);
 
@@ -54,7 +54,7 @@ namespace jsk_transformable_interactive_marker
 
     ros::Subscriber setcolor_sub_;
     ros::Subscriber setpose_sub_;
-    ros::Subscriber addposediff_sub_;
+    ros::Subscriber addpose_sub_;
 
     ros::Subscriber set_r_sub_;
     ros::Subscriber set_sm_r_sub_;

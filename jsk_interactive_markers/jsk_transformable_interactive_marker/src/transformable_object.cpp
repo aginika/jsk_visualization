@@ -77,3 +77,13 @@ visualization_msgs::InteractiveMarker TransformableObject::getInteractiveMarker(
   int_marker.scale = getInteractiveMarkerScale();
   return int_marker;
 };
+
+void TransformableObject::addPose(geometry_msgs::Pose msg){
+  pose_.position.x += msg.position.x;
+  pose_.position.y += msg.position.y;
+  pose_.position.z += msg.position.z;
+  pose_.orientation.x += msg.orientation.x;
+  pose_.orientation.y += msg.orientation.y;
+  pose_.orientation.z += msg.orientation.z;
+  pose_.orientation.w += msg.orientation.w;
+}
