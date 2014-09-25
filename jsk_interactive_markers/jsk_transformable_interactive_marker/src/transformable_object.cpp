@@ -4,6 +4,10 @@ using namespace jsk_transformable_interactive_marker;
 
 TransformableObject::TransformableObject(){
   ROS_INFO("Init TransformableObject");
+  pose_.orientation.x = 0;
+  pose_.orientation.y = 0;
+  pose_.orientation.z = 0;
+  pose_.orientation.w = 1;
 }
 
 std::vector<visualization_msgs::InteractiveMarkerControl> TransformableObject::makeRotateTransFixControl(){
@@ -82,8 +86,26 @@ void TransformableObject::addPose(geometry_msgs::Pose msg){
   pose_.position.x += msg.position.x;
   pose_.position.y += msg.position.y;
   pose_.position.z += msg.position.z;
-  pose_.orientation.x += msg.orientation.x;
-  pose_.orientation.y += msg.orientation.y;
-  pose_.orientation.z += msg.orientation.z;
-  pose_.orientation.w += msg.orientation.w;
+  float tmp_x = pose_.orientation.x, tmp_y = pose_.orientation.y,
+    tmp_z = pose_.orientation.z, tmp_w = pose_.orientation.w;
+  pose_.orientation.w =
+    tmp_w * msg.orientation.w -
+    tmp_x * msg.orientation.x -
+    tmp_y * msg.orientation.y -
+    tmp_z * msg.orientation.z;
+  pose_.orientation.x =
+    tmp_y * msg.orientation.z -
+    tmp_z * msg.orientation.y +
+    tmp_y * msg.orientation.x +
+    tmp_x * msg.orientation.w;
+  pose_.orientation.y =
+    tmp_z * msg.orientation.x -
+    tmp_x * msg.orientation.z +
+    tmp_w * msg.orientation.y +
+    tmp_y * msg.orientation.w ;
+  pose_.orientation.z =
+    tmp_x * msg.orientation.y -
+    tmp_y * msg.orientation.x +
+    tmp_w * msg.orientation.z +
+    tmp_z * msg.orientation.w;
 }

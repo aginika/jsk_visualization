@@ -48,9 +48,9 @@
     <param name="x_max" value="0.1"/>
     <param name="y_max" value="0.1"/>
     <param name="z_max" value="0.1"/>
-    <param name="rx_max" value="10"/>
-    <param name="ry_max" value="10"/>
-    <param name="rz_max" value="10"/>
+    <param name="rx_max" value="0.1"/>
+    <param name="ry_max" value="0.1"/>
+    <param name="rz_max" value="0.1"/>
   </node>
   <!-- END FOR SPACENAV-->
 </launch>

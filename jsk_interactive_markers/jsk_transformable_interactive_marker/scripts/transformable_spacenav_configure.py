@@ -47,6 +47,7 @@ def callback(msg):
         target_pose.position.y = y_v1 * y_max
         target_pose.position.z = z_v1 * z_max
 
+    target_pose.orientation.w = 1
     if not separate_mode or (separate_mode and not translate_mode):
         q = quaternion_from_euler(rx_v1 * rx_max, ry_v1 * ry_max, rz_v1 * rz_max, 'rxyz')
         target_pose.orientation.x = q[0]
