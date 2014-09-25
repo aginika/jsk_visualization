@@ -2,7 +2,6 @@
 
 using namespace jsk_transformable_interactive_marker;
 
-
 TransformableObject::TransformableObject(){
   ROS_INFO("Init TransformableObject");
 }
@@ -62,16 +61,19 @@ void TransformableObject::addControl(visualization_msgs::InteractiveMarker &int_
 {
   if(fixed){
     std::vector<visualization_msgs::InteractiveMarkerControl> rotate_controls = makeRotateTransFixControl();
-
     int_marker.controls.insert(int_marker.controls.end(), rotate_controls.begin(), rotate_controls.end());
   }
 };
-
 
 visualization_msgs::InteractiveMarker TransformableObject::getInteractiveMarker(){
   visualization_msgs::InteractiveMarker int_marker;
 
   addMarker(int_marker);
   addControl(int_marker);
+  int_marker.header.frame_id = frame_id_;
+  int_marker.name = name_;
+  int_marker.description = description_;
+  int_marker.pose = pose_;
+  int_marker.scale = getInteractiveMarkerScale();
   return int_marker;
 };

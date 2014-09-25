@@ -1,8 +1,7 @@
 #include <jsk_transformable_interactive_marker/transformable_box.h>
 
-
 namespace jsk_transformable_interactive_marker{
-  TransformableBox::TransformableBox( float length , float r, float g, float b, float a){
+  TransformableBox::TransformableBox( float length , float r, float g, float b, float a, std::string frame, std::string name, std::string description){
     box_x_ = box_y_ = box_z_ = length;
 
     box_r_ = r;
@@ -10,9 +9,13 @@ namespace jsk_transformable_interactive_marker{
     box_b_ = b;
     box_a_ = a;
     marker_.type = visualization_msgs::Marker::CUBE;
+
+    frame_id_ = frame;
+    name_ = name;
+    description_ = description;
   }
 
-  TransformableBox::TransformableBox( float x, float y, float z , float r, float g, float b, float a){
+  TransformableBox::TransformableBox( float x, float y, float z , float r, float g, float b, float a, std::string frame, std::string name, std::string description){
     box_x_ = x;
     box_y_ = y;
     box_z_ = z;
@@ -21,6 +24,10 @@ namespace jsk_transformable_interactive_marker{
     box_b_ = b;
     box_a_ = a;
     marker_.type = visualization_msgs::Marker::CUBE;
+
+    frame_id_ = frame;
+    name_ = name;
+    description_ = description;
   }
 
   visualization_msgs::Marker TransformableBox::getVisualizationMsgMarker(){
