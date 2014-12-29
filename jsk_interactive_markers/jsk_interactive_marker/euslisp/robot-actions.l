@@ -2,6 +2,7 @@
 
 (ros::load-ros-manifest "jsk_pcl_ros")
 (ros::load-ros-manifest "jsk_interactive_marker")
+(load "package://pr2eus_moveit/euslisp/collision-object-publisher.l")
 
 (require "models/arrow-object.l")
 (require :robot-joint-movement "package://jsk_interactive_marker/euslisp/robot-joint-movement.l")
@@ -414,6 +415,7 @@
 	  box-cds
 	  (move-arm :rarm)
 	  (use-torso t)
+      eusbox
 	  )
      
      (setq start-cds (send self :get-eus-coords (ros::tf-pose->coords (send msg :box :pose)) (send msg :box :header)))
@@ -427,6 +429,13 @@
 
      (setq start-cds (send start-cds :transform handle-pose))
      (setq des-cds (send des-cds :transform handle-pose))
+
+     ;;Make collision cube and add to pr2 moveit
+     ;; (setq eusbox (make-cube (send msg :box :dimensions :x) (send msg :box :dimensions :y) (send msg :box :dimensions :z)))
+     ;; (send eusbox :locate (float-vector (send msg :box :pose :x) (send msg :box :pose :y) (send msg :box :pose :z)) :wolrd)
+
+     (setq *co* (instance collision-object-publisher :init))
+     ;; (send *co* :add-attached-object eusbox "r_gripper")
 
      ;;pre grasp
      (ros::ros-info "pre grasp")
@@ -530,6 +539,8 @@
      (send *ri* :wait-interpolation)
      (send *ri* :stop-grasp move-arm)
      (send *ri* :wait-interpolation)
+
+     (send *co* :clear-all)
 
      ;;pose-place
      (ros::ros-info "post place")
