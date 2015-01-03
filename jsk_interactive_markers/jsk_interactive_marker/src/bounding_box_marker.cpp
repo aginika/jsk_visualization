@@ -133,7 +133,7 @@ int main(int argc, char** argv)
   box_arr_pub = pnh.advertise<jsk_pcl_ros::BoundingBoxArray>("selected_box_array", 1);
   ros::Subscriber sub = pnh.subscribe("bounding_box_array", 1, boxCallback);
   ros::ServiceServer renew_model_srv_
-	= pnh_.advertiseService("request_id", indexRequest);
+	= pnh.advertiseService("request_id", indexRequest);
 
   ros::spin();
   server.reset();

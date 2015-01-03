@@ -1,7 +1,9 @@
 #!/usr/bin/env roseus
 
 (ros::load-ros-manifest "jsk_pcl_ros")
+(ros::load-ros-manifest "jsk_rviz_plugins")
 (ros::load-ros-manifest "jsk_interactive_marker")
+(ros::load-ros-manifest "aginika_baxter_grasp_training")
 (load "package://pr2eus_moveit/euslisp/collision-object-publisher.l")
 
 (require "models/arrow-object.l")
@@ -420,6 +422,8 @@
      
      (setq start-cds (send self :get-eus-coords (ros::tf-pose->coords (send msg :box :pose)) (send msg :box :header)))
      (setq des-cds (send self :get-eus-coords (ros::tf-pose->coords (send msg :destination :pose)) (send msg :destination :header)))
+
+
      (unless start-cds
        (return-from :box-movement-callback nil)
        )
@@ -430,15 +434,23 @@
      (setq start-cds (send start-cds :transform handle-pose))
      (setq des-cds (send des-cds :transform handle-pose))
 
+     (send start-cds :translate #f(0 0 -100) :world)
+     (send des-cds :translate #f(0 0 -100) :world)
+     
+     ;; (send *ri* :stop-grasp)
+     ;; (send *ri* :wait-interpolation)
      ;;Make collision cube and add to pr2 moveit
      ;; (setq eusbox (make-cube (send msg :box :dimensions :x) (send msg :box :dimensions :y) (send msg :box :dimensions :z)))
      ;; (send eusbox :locate (float-vector (send msg :box :pose :x) (send msg :box :pose :y) (send msg :box :pose :z)) :wolrd)
 
-     (setq *co* (instance collision-object-publisher :init))
+     ;; (setq *co* (instance collision-object-publisher :init))
      ;; (send *co* :add-attached-object eusbox "r_gripper")
+     ;;(send *ri* :stop-grasp)
+     ;; (send *ri* :wait-interpolation)
 
      ;;pre grasp
      (ros::ros-info "pre grasp")
+     (speak-en "pre grasp")
      (send start-cds :translate #f(-100 0 0))
      (unless
 	 (send *robot* :inverse-kinematics
@@ -450,19 +462,21 @@
 	       :debug-view nil)
        (return-from :box-movement-callback nil)
        )
+
      (if *use-moveit*
 	 (progn
 	   (send *ri* :angle-vector (send *robot* :angle-vector) 5000 :head-controller)
 	   (send *ri* :angle-vector-motion-plan (send *robot* :angle-vector)
 		 :move-arm :arms :use-torso t))
-       (send *ri* :angle-vector (send *robot* :angle-vector) 5000))
+       (send *ri* :angle-vector (send *robot* :angle-vector)))
 
      (send *ri* :wait-interpolation)
-     (send *ri* :angle-vector (send *robot* :angle-vector) 3000)
+     (send *ri* :angle-vector (send *robot* :angle-vector))
      (send *ri* :wait-interpolation)
 
      ;;grasp
      (ros::ros-info "grasp")
+     (speak-en "grasp")
      (send start-cds :translate #f(100 0 0))
      (unless
 	 (send *robot* :inverse-kinematics
@@ -472,104 +486,192 @@
 	       :look-at-target t
 	       :rotation-axis t
 	       :debug-view nil)
-       (return-from :box-movement-callback nil)
+       (progn	
+	 (speak-en "grasp fail")
+	 (ros::ros-info "grasp fail")
+	 (send *robot* :reset-pose)
+	 (send *ri* :angle-vector (send *robot* :angle-vector))
+	 (send *ri* :wait-interpolation)
+	 (return-from :box-movement-callback nil)
+	 )
        )
 
      (send *ri* :angle-vector (send *robot* :angle-vector) 2000)
      (send *ri* :wait-interpolation)
-     (send *ri* :start-grasp move-arm)
-     (send *ri* :wait-interpolation)
+     (send *ri* :start-grasp)
+     
+     ;;check grasp result
+     (let (req res color text)
+      (setq req (instance aginika_baxter_grasp_training::GraspCheckRequest :init)) 
+      (setq res (ros::service-call "/grasp_state" req t))
+      (if (send res :right_grasp)
+	  (progn
+	    (speak-en "grasp succeded")
+	    (setq color (instance std_msgs::ColorRGBA :init))
+	    (send color :r (/ 25 255.0))
+	    (send color :g (/ 255 255.0))
+	    (send color :b (/ 25 255.0))
+	    (send color :a (/ 255 255.0))
+
+	    (setq text "Grasp SUCCESS")
+	    )
+	(progn
+	    (speak-en "grasp failed")
+	    (setq color (instance std_msgs::ColorRGBA :init))
+	    (send color :r (/ 255 255.0))
+	    (send color :g (/ 25 255.0))
+	    (send color :b (/ 25 255.0))
+	    (send color :a (/ 255 255.0))
+	    (setq text "Grasp FAIL")
+	  )
+	)
+      (let ((text_msg (instance jsk_rviz_plugins::OverlayText :init)))
+	(send text_msg :action jsk_rviz_plugins::OverlayText::*ADD*)
+	(send text_msg :width 640)
+	(send text_msg :height 100)
+	(send text_msg :fg_color color)
+	(send text_msg :bg_color :a 0.2)
+	(send text_msg :line_width 2)
+	(send text_msg :text_size 40)
+	(send text_msg :font "DejaVu Sans Mono")
+	(send text_msg :text text)
+	(ros::publish "/robot_actions/grasp_status" text_msg)
+	(if (not (send res :right_grasp))
+	    (progn
+	      (send *robot* :reset-pose)
+	      (speak-en "I couldn't grasp" :google t)
+	      (send *ri* :stop-grasp)
+	      (send *ri* :angle-vector (send *robot* :angle-vector))
+	      (send *ri* :wait-interpolation)
+	      (return-from :box-movement-callback nil)
+	      )
+	  )
+	)
+      )
+
+     (speak-en "end grasp")
+     ;; (send *ri* :wait-interpolation)
 
      ;;raise
      (ros::ros-info "raise")
+     (speak-en "raise")
      (send start-cds :translate #f(0 0 100) :world)
      (print start-cds)
      (unless
-	 (send *robot* :inverse-kinematics
-	       start-cds
-	       :move-target (send *robot* move-arm :end-coords)
-	       :use-torso use-torso
-	       :rotation-axis t
-	       :look-at-target t
-	       :debug-view nil)
-       (return-from :box-movement-callback nil)
+     	 (send *robot* :inverse-kinematics
+     	       start-cds
+     	       :move-target (send *robot* move-arm :end-coords)
+     	       :use-torso use-torso
+     	       :rotation-axis t
+     	       :look-at-target t
+     	       :debug-view nil)
+       (progn
+     	 (send *robot* :reset-pose)
+	 (send *ri* :stop-grasp)
+     	 (send *ri* :angle-vector (send *robot* :angle-vector))
+     	 (send *ri* :wait-interpolation)
+     	 (return-from :box-movement-callback nil)
+     	 )
        )
      (send *ri* :angle-vector (send *robot* :angle-vector) 2000)
      (send *ri* :wait-interpolation)
 
      (ros::ros-info "pre place")
+     (speak-en "pre place")
      (send des-cds :translate #f(0 0 100) :world)
 
      (unless
-	 (send *robot* :inverse-kinematics
-	       des-cds
-	       :move-target (send *robot* :rarm :end-coords)
-	       :use-torso use-torso
-	       :rotation-axis t
-	       :look-at-target t
-	       :debug-view nil)
-       (return-from :box-movement-callback nil)
+     	 (send *robot* :inverse-kinematics
+     	       des-cds
+     	       :move-target (send *robot* :rarm :end-coords)
+     	       :use-torso use-torso
+     	       :rotation-axis t
+     	       :look-at-target t
+     	       :debug-view nil)
+       (progn
+     	 (send *robot* :reset-pose)
+     	 (send *ri* :angle-vector (send *robot* :angle-vector))
+	 (send *ri* :stop-grasp)
+	 (send *ri* :wait-interpolation)
+     	 (return-from :box-movement-callback nil)
+     	 )
        )
 
      (if *use-moveit*
-	 (progn
-	   (send *ri* :angle-vector (send *robot* :angle-vector) 5000 :head-controller)
-	   (send *ri* :angle-vector-motion-plan (send *robot* :angle-vector)
-		 :move-arm :arms :use-torso t)
-	   )
-       (send *ri* :angle-vector (send *robot* :angle-vector) 5000)
+     	 (progn
+     	   (send *ri* :angle-vector (send *robot* :angle-vector) 5000 :head-controller)
+     	   (send *ri* :angle-vector-motion-plan (send *robot* :angle-vector)
+     		 :move-arm :arms :use-torso t)
+     	   )
+       (send *ri* :angle-vector (send *robot* :angle-vector))
        )
      (send *ri* :wait-interpolation)
-     (send *ri* :angle-vector (send *robot* :angle-vector) 3000)
+     (send *ri* :angle-vector (send *robot* :angle-vector))
      (send *ri* :wait-interpolation)
 
      (ros::ros-info "place")
+     (speak-en "place")
      (send des-cds :translate #f(0 0 -100) :world)
      (unless 
-	 (send *robot* :inverse-kinematics
-	       des-cds
-	       :move-target (send *robot* :rarm :end-coords)
-	       :use-torso use-torso
-	       :rotation-axis t
-	       :look-at-target t
-	       :debug-view nil)
-       (return-from :box-movement-callback nil)
+     	 (send *robot* :inverse-kinematics
+     	       des-cds
+     	       :move-target (send *robot* :rarm :end-coords)
+     	       :use-torso use-torso
+     	       :rotation-axis t
+     	       :look-at-target t
+     	       :debug-view nil)
+       (progn
+     	 (send *robot* :reset-pose)
+     	 (send *ri* :angle-vector (send *robot* :angle-vector) 2000)
+     	 (send *ri* :wait-interpolation)
+     	 (return-from :box-movement-callback nil)
+     	 )
        )
-     (send *ri* :angle-vector (send *robot* :angle-vector) 2000)
-     (send *ri* :wait-interpolation)
-     (send *ri* :stop-grasp move-arm)
+     (send *robot* :rarm :wrist-r :joint-angle (+ -20 (random 40)))
+     (send *ri* :angle-vector (send *robot* :angle-vector))
      (send *ri* :wait-interpolation)
 
-     (send *co* :clear-all)
+     (send *ri* :stop-grasp)
+
+     ;; (send *co* :clear-all)
 
      ;;pose-place
      (ros::ros-info "post place")
+     (speak-en "post place")
      (send des-cds :translate #f(-100 0 0))
      (unless
-	 (send *robot* :inverse-kinematics
-	       des-cds
-	       :move-target (send *robot* :rarm :end-coords)
-	       :use-torso use-torso
-	       :rotation-axis t
-	       :look-at-target t
-	       :debug-view nil)
-       (return-from :box-movement-callback nil)
+     	 (send *robot* :inverse-kinematics
+     	       des-cds
+     	       :move-target (send *robot* :rarm :end-coords)
+     	       :use-torso use-torso
+     	       :rotation-axis t
+     	       :look-at-target t
+     	       :debug-view nil)
+       (progn
+     	(send *robot* :reset-pose)
+     	(send *ri* :angle-vector (send *robot* :angle-vector))
+     	(send *ri* :wait-interpolation)
+     	(return-from :box-movement-callback nil)
+     	)
        )
 
-     (send *ri* :angle-vector (send *robot* :angle-vector) 2000)
+     (send *ri* :angle-vector (send *robot* :angle-vector))
      (send *ri* :wait-interpolation)
 
      ;;reset pose
-     (send *robot* :reset-manip-pose)
+     (send *robot* :reset-pose)
      (if *use-moveit*
-	 (progn
-	   (send *ri* :angle-vector (send *robot* :angle-vector) 5000 :head-controller)
-	   (send *ri* :angle-vector-motion-plan (send *robot* :angle-vector)
-		 :move-arm :arms :use-torso t)
-	   )
-       (send *ri* :angle-vector (send *robot* :angle-vector) 5000)
+     	 (progn
+     	   (send *ri* :angle-vector (send *robot* :angle-vector) 5000 :head-controller)
+     	   (send *ri* :angle-vector-motion-plan (send *robot* :angle-vector)
+     		 :move-arm :arms :use-torso t)
+     	   )
+       (send *ri* :angle-vector (send *robot* :angle-vector))
        )
      (send *ri* :wait-interpolation)
+     (speak-en "pick place end")
+     (ros::ros-info "box-end")
+     (return-from :box-movement-callback nil)
      )
   )
 
@@ -594,7 +696,6 @@
 
    (setq *interactive-pc-nodename* "/interactive_point_cloud")
 
-   (ros::roseus "robot_actions")
    (setq *tfb* (instance ros::transform-broadcaster :init))
    (setq *tfl* (instance ros::transform-listener :init))
 
@@ -609,6 +710,9 @@
    (ros::subscribe
     (format nil "~A/move_model" *im-nodename*)
     jsk_interactive_marker::MoveModel #'send self :move-model-callback)
+
+   (ros::advertise "/robot_actions/grasp_status"
+		   jsk_rviz_plugins::OverlayText)
 
    (if *one-click-grasp*
        (ros::subscribe
@@ -628,7 +732,18 @@
      (send *irtviewer* :look-all)
      )
    )
+
+  (:main
+   ()
+   (while (ros::ok)
+     (x::window-main-one)
+     (ros::spin-once)
+     (ros::sleep)
+     )
+   )
   )
 
-(instance robot-actions :init)
-(ros::spin)
+
+(ros::roseus "robot_actions")
+(setq raxx (instance robot-actions :init))
+(send raxx :main)
