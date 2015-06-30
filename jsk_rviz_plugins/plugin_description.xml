@@ -21,6 +21,11 @@
       open all displays
     </description>
   </class>
+  <class name="jsk_rviz_plugin/RecordRosbag" type="jsk_rviz_plugins::RecordRosbagTool" base_class_type="rviz::Tool">
+    <description>
+      record ths topic which rviz is subscribing
+    </description>
+  </class>
 
   <class name="jsk_rviz_plugin/PoseArray"
          type="jsk_rviz_plugins::PoseArrayDisplay"

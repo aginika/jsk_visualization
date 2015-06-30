@@ -94,6 +94,7 @@ qt4_wrap_cpp(MOC_FILES
   src/video_capture_display.h
   src/twist_stamped_display.h
   src/pose_array_display.h
+  src/record_rosbag_tool.h
 )
 
 set(SOURCE_FILES
@@ -138,6 +139,7 @@ set(SOURCE_FILES
   src/video_capture_display.cpp
   src/twist_stamped_display.cpp
   src/pose_array_display.cpp
+  src/record_rosbag_tool.cpp
   ${MOC_FILES}
 )
 
